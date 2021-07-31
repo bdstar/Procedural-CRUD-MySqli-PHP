@@ -1,4 +1,110 @@
 <?php
+	/*array(
+		'name' => "id", // table column name 
+		'type' => "INT", //Column data type according to the SQL convention
+		'lenght' => 11, //Column length as integer
+		'default' => NULL, // possible value can be [NULL, CURRENT_TIMESTAMP, AUTO_INCREMENT, "string"]	
+		'index' => "PRIMARY",	// PRIMARY, UNIQUE, INDEX, FULLTEXT, SPATIAL						
+	),
+	# --------- key->default -------
+	//NULL => NULL DEFAULT NULL
+	//CURRENT_TIMESTAMP => NOT NULL DEFAULT CURRENT_TIMESTAMP
+	//AUTO_INCREMENT => NOT NULL AUTO_INCREMENT
+	//'string' => NOT NULL DEFAULT 'string'
+
+	# --------- key->index -----------
+	// PRIMARY KEY (`id`)
+	// UNIQUE (`id`, `firstname`)
+	// INDEX (`lastname`)
+	// FULLTEXT (`age`)
+	// SPATIAL (`created_at`)	
+	*/
+
+	function create_table($connection, $tablename, array $table){
+		$sql = "CREATE TABLE `".$tablename."` ( ";
+		$sql_index = "";
+
+		foreach ($table as $column) {
+			foreach ($column as $key => $value) {
+				switch ($key) {
+					case "name":
+						$sql .= "`".$value."`";
+						$column_name = $value;
+						break;
+					case "type":
+						$sql .= " ".$value."";
+						break;
+					case "lenght":
+						if($value !== NULL){
+							$sql .= "(".$value.")";
+						}							
+						break;
+					case "default":
+						if ($value==NULL) {
+							$sql .= " NULL DEFAULT NULL,";
+						} 
+						elseif ($value=="CURRENT_TIMESTAMP") {
+							$sql .= " NOT NULL DEFAULT CURRENT_TIMESTAMP,";
+						}
+						elseif ($value=="AUTO_INCREMENT") {
+							$sql .= " NOT NULL AUTO_INCREMENT,";
+						}						
+						else {
+							$sql .= " NOT NULL DEFAULT '".$value."',";
+						}
+						break;
+					case "index":
+						if ($value=="PRIMARY") {
+							$sql_index .= " PRIMARY KEY (`".$column_name."`)";
+						} 
+						elseif ($value=="UNIQUE") {
+							$sql_index .= " ,UNIQUE (`".$column_name."`)";
+						}
+						elseif ($value=="INDEX") {
+							$sql_index .= " ,INDEX (`".$column_name."`)";
+						}						
+						elseif ($value=="FULLTEXT") {
+							$sql_index .= " ,FULLTEXT (`".$column_name."`)";
+						}
+						elseif ($value=="SPATIAL") {
+							$sql_index .= " ,SPATIAL (`".$column_name."`)";
+						}	
+						break;
+				}
+			}
+		} 
+		$sql .= $sql_index;
+		$sql .= ") ENGINE = InnoDB;";
+		echo "sql: ".$sql;
+		die;
+		$sql="CREATE TABLE $tablename(FirstName CHAR(30),LastName CHAR(30),Age INT)";
+
+		// Check and Execute query
+		if (mysqli_query($connection,$sql)) {
+			echo "<br>Table <b style='color: blue'>$tablename</b> created successfully";
+			return true;
+		} else {
+			echo "<br>Error creating table: <b style='color: blue'>" . mysqli_error($connection) . "</b>";
+			return false;
+		}
+
+
+
+		/*
+		CREATE TABLE `test1`. ( 
+			`id` INT(11) NOT NULL AUTO_INCREMENT , 
+			`firstname` VARCHAR(100) NULL DEFAULT NULL , 
+			`lastname` VARCHAR(100) NULL DEFAULT NULL , 
+			`age` INT(11) NULL DEFAULT NULL , 
+			`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , 
+			`updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , 
+			PRIMARY KEY (`id`)
+			) ENGINE = InnoDB;
+
+		CREATE TABLE `test1`. ( `id` INT(11) NULL AUTO_INCREMENT , `firstname` VARCHAR(100) NULL DEFAULT '' , `lastname` VARCHAR(100) NULL DEFAULT NULL , `age` INT(11) NULL DEFAULT NULL , `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`), INDEX (`lastname`), UNIQUE (`id`, `firstname`), FULLTEXT (`age`), SPATIAL (`created_at`)) ENGINE = InnoDB;
+		CREATE TABLE `test1`. ( `id` INT(11) NULL AUTO_INCREMENT , `firstname` VARCHAR(100) NULL DEFAULT '' , `lastname` VARCHAR(100) NULL DEFAULT NULL , `age` INT(11) NULL DEFAULT NULL , `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`, `firstname`), INDEX (`lastname`), UNIQUE (`id`), FULLTEXT (`age`), SPATIAL (`created_at`)) ENGINE = InnoDB;
+		*/
+	}
 
 	//Fatch data by accepting table name and columns(1 dimentional array) name
 	function fatch($connection, $table, array $columns){
@@ -137,52 +243,57 @@ if (mysqli_query($con,$sql)) {
   echo "<br>Error creating database: " . mysqli_error($con);
 }
 
-/*
-$create_table = 
+
+
+$create_table = array(
 	array(
-		'name' => "id", // table column name 
-		'type' => "INT", //Column data type according to the SQL convention
-		'lenght' => 11, //Column length as integer
-		'default' => NULL, // possible value can be [NULL, CURRENT_TIMESTAMP, AUTO_INCREMENT, "string"]	
-		'index' => "PRIMARY",	// PRIMARY, UNIQUE, INDEX, FULLTEXT, SPATIAL						
-	);
-	# --------- default -------
-	//NULL => NULL DEFAULT NULL
-	//CURRENT_TIMESTAMP => NOT NULL DEFAULT CURRENT_TIMESTAMP
-	//AUTO_INCREMENT => NOT NULL AUTO_INCREMENT
-	//'string' => NOT NULL DEFAULT 'string'
+		'name' => "id", 
+		'type' => "INT", 
+		'lenght' => 11,
+		'default' => "AUTO_INCREMENT",
+		'index' => "PRIMARY",						
+	),	
+	array(
+		'name' => "firstname", 
+		'type' => "VARCHAR", 
+		'lenght' => 100,
+		'default' => NULL,	
+		'index' => NULL					
+	),	
+	array(
+		'name' => "lastname", 
+		'type' => "VARCHAR", 
+		'lenght' => 100,
+		'default' => NULL,	
+		'index' => NULL							
+	),
+	array(
+		'name' => "age", 
+		'type' => "INT", 
+		'lenght' => 11,
+		'default' => NULL,	
+		'index' => NULL							
+	),
+	array(
+		'name' => "created_at", 
+		'type' => "DATETIME", 
+		'lenght' => NULL,
+		'default' => "CURRENT_TIMESTAMP",
+		'index' => NULL						
+	),
+	array(
+		'name' => "updated_at", 
+		'type' => "DATETIME", 
+		'lenght' => NULL,
+		'default' => "CURRENT_TIMESTAMP",
+		'index' => NULL								
+	),						
+);
 
-	# --------- index -----------
-	// PRIMARY KEY (`id`)
-	// UNIQUE (`id`, `firstname`)
-	// INDEX (`lastname`)
-	// FULLTEXT (`age`)
-	// SPATIAL (`created_at`)
-
-CREATE TABLE `test1`. ( 
-	`id` INT(11) NOT NULL AUTO_INCREMENT , 
-	`firstname` VARCHAR(100) NULL DEFAULT NULL , 
-	`lastname` VARCHAR(100) NULL DEFAULT NULL , 
-	`age` INT(11) NULL DEFAULT NULL , 
-	`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , 
-	`updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , 
-	PRIMARY KEY (`id`)
-	) ENGINE = InnoDB;
-
-CREATE TABLE `test1`. ( `id` INT(11) NULL AUTO_INCREMENT , `firstname` VARCHAR(100) NULL DEFAULT '' , `lastname` VARCHAR(100) NULL DEFAULT NULL , `age` INT(11) NULL DEFAULT NULL , `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`), INDEX (`lastname`), UNIQUE (`id`, `firstname`), FULLTEXT (`age`), SPATIAL (`created_at`)) ENGINE = InnoDB;
-CREATE TABLE `test1`. ( `id` INT(11) NULL AUTO_INCREMENT , `firstname` VARCHAR(100) NULL DEFAULT '' , `lastname` VARCHAR(100) NULL DEFAULT NULL , `age` INT(11) NULL DEFAULT NULL , `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`, `firstname`), INDEX (`lastname`), UNIQUE (`id`), FULLTEXT (`age`), SPATIAL (`created_at`)) ENGINE = InnoDB;
-*/
-
+/*------------------ Create Table Operation ----------------------*/
 $tablename = "persons";
-// Create table query
-$sql="CREATE TABLE $tablename(FirstName CHAR(30),LastName CHAR(30),Age INT)";
-
-// Check and Execute query
-if (mysqli_query($con,$sql)) {
-  echo "<br>Table <b style='color: blue'>$tablename</b> created successfully";
-} else {
-  echo "<br>Error creating table: <b style='color: blue'>" . mysqli_error($con) . "</b>";
-}
+# Create Table according to the array
+create_table($con,$tablename, $create_table);
 
 
 /*------------------ INSEART Operation ----------------------*/
@@ -211,9 +322,9 @@ $update_condition = array("FirstName"=>'MD',"Age"=>'34');
 # Select consition to fetch data from table
 $select_condition = array("FirstName","LastName","Age");
 $show = fatch($con ,$tablename, $select_condition);
-/*echo "<pre>";
+echo "<pre>";
 print_r($show);
-echo "</pre>";*/
+echo "</pre>";
 
 mysqli_close($con);
 ?>
